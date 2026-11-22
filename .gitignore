@@ -1,0 +1,9 @@
+# Paid product assets — must stay off the public GitHub Pages repo.
+pro-pack/
+pro-pack.zip
+MARKETING.md
+README.internal.md
+
+# Local noise
+.DS_Store
+*.log

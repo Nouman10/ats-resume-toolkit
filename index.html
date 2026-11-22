@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ATS Resume Keyword &amp; Score Checker — Free, Private, No Signup</title>
+<meta name="description" content="Paste your resume and a job description to see your ATS match score, missing keywords, and formatting red flags. Runs entirely in your browser — your resume never leaves your device." />
+
+<!-- Social preview. NOTE: crawlers need an absolute URL for og:image. After deploying,
+     change the two image values below to https://YOUR-DOMAIN/og-image.png -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Free ATS Resume Keyword &amp; Score Checker" />
+<meta property="og:description" content="See your ATS match score, the keywords you're missing, and the formatting that gets resumes filtered. Runs 100% in your browser — nothing is uploaded." />
+<meta property="og:image" content="og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="ATS Resume Checker — free, private, runs in your browser" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Free ATS Resume Keyword &amp; Score Checker" />
+<meta name="twitter:description" content="Instant ATS match score, missing keywords, and formatting checks. Runs entirely in your browser." />
+<meta name="twitter:image" content="og-image.png" />
+<meta name="theme-color" content="#4f46e5" />
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f46e5'/%3E%3Ctext x='32' y='45' font-family='sans-serif' font-size='38' font-weight='700' fill='white' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E" />
+
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  html { scroll-behavior: smooth; }
+  .ring-track { stroke: #e2e8f0; }
+  .ring-bar { transition: stroke-dashoffset .8s cubic-bezier(.22,1,.36,1); }
+  .chip { transition: transform .12s ease; }
+  .chip:hover { transform: translateY(-1px); }
+  @media print { .no-print { display: none !important; } }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+<header class="border-b border-slate-200 bg-white">
+  <div class="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
+    <div class="flex items-center gap-2">
+      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white font-bold">A</div>
+      <div>
+        <p class="text-sm font-semibold leading-tight">ATS Resume Checker</p>
+        <p class="text-xs text-slate-500 leading-tight">Free · Private · No signup</p>
+      </div>
+    </div>
+    <a href="#pack" class="hidden rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 sm:block">
+      Get the $9 template pack
+    </a>
+  </div>
+</header>
+
+<main class="mx-auto max-w-5xl px-5">
+
+  <!-- Hero -->
+  <section class="pt-10 pb-8 sm:pt-14">
+    <h1 class="text-3xl font-bold tracking-tight sm:text-4xl">Will your resume survive the ATS?</h1>
+    <p class="mt-3 max-w-2xl text-slate-600">
+      Paste your resume and the job description. Get an instant match score, the keywords you're missing,
+      and the formatting issues that get resumes filtered out before a human ever sees them.
+    </p>
+    <p class="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+      <span aria-hidden="true">🔒</span> Everything runs in your browser. Nothing is uploaded, stored, or tracked.
+    </p>
+  </section>
+
+  <!-- Inputs -->
+  <section class="grid gap-4 md:grid-cols-2">
+    <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <label for="resume" class="mb-2 flex items-center justify-between text-sm font-semibold">
+        <span>1. Your resume text</span>
+        <span id="resumeCount" class="text-xs font-normal text-slate-400">0 words</span>
+      </label>
+      <textarea id="resume" rows="14" spellcheck="false"
+        class="w-full resize-y rounded-lg border border-slate-300 bg-slate-50 p-3 font-mono text-[13px] leading-relaxed outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        placeholder="Paste the full text of your resume here.&#10;&#10;Tip: select all in Word or Google Docs, copy, and paste — formatting is not required, the text is what matters."></textarea>
+    </div>
+    <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <label for="jd" class="mb-2 flex items-center justify-between text-sm font-semibold">
+        <span>2. The job description</span>
+        <span id="jdCount" class="text-xs font-normal text-slate-400">0 words</span>
+      </label>
+      <textarea id="jd" rows="14" spellcheck="false"
+        class="w-full resize-y rounded-lg border border-slate-300 bg-slate-50 p-3 font-mono text-[13px] leading-relaxed outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+        placeholder="Paste the job posting here — responsibilities, requirements, and the 'nice to have' section all count."></textarea>
+    </div>
+  </section>
+
+  <div class="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+    <button id="run" class="w-full rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:w-auto">
+      Check my resume
+    </button>
+    <button id="clear" class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:w-auto">
+      Clear
+    </button>
+    <p id="error" class="hidden text-sm font-medium text-rose-600"></p>
+  </div>
+
+  <!-- Results -->
+  <section id="results" class="hidden pb-6 pt-10">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div class="min-w-0">
+        <h2 class="text-lg font-semibold">Your results</h2>
+        <p class="text-xs text-slate-500">Generated in this browser tab. Nothing was uploaded.</p>
+      </div>
+      <button id="downloadReport" type="button"
+        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+        Download report (.txt)
+      </button>
+    </div>
+
+    <div class="grid gap-4 lg:grid-cols-3">
+
+      <!-- Score -->
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold text-slate-500">Overall match</p>
+        <div class="mt-3 flex items-center justify-center">
+          <div class="relative h-40 w-40">
+            <svg viewBox="0 0 120 120" class="h-40 w-40 -rotate-90">
+              <circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="12"/>
+              <circle id="ring" class="ring-bar" cx="60" cy="60" r="52" fill="none" stroke-width="12"
+                      stroke-linecap="round" stroke="#4f46e5" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span id="scoreNum" class="text-4xl font-bold">0</span>
+              <span class="text-xs text-slate-400">out of 100</span>
+            </div>
+          </div>
+        </div>
+        <p id="verdict" class="mt-3 text-center text-sm font-medium"></p>
+        <p id="verdictHelp" class="mt-1 text-center text-xs text-slate-500"></p>
+      </div>
+
+      <!-- Subscores -->
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+        <p class="text-sm font-semibold text-slate-500">How the score breaks down</p>
+        <div class="mt-4 space-y-4" id="subscores"></div>
+        <div class="mt-4 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
+          Weighted: keyword coverage 60% · ATS-safe formatting 25% · complete sections 15%.
+          The score measures machine readability, not how good you are at the job.
+        </div>
+      </div>
+    </div>
+
+    <!-- Keywords -->
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-semibold text-slate-500">Missing keywords <span id="missCount" class="text-slate-400"></span></p>
+          <button id="copyMissing" class="text-xs font-medium text-indigo-600 hover:underline">Copy</button>
+        </div>
+        <div id="missing" class="mt-3 flex flex-wrap gap-2"></div>
+        <p id="missingEmpty" class="mt-3 hidden text-sm text-emerald-600">Nothing missing — strong coverage.</p>
+      </div>
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-semibold text-slate-500">Matched keywords <span id="hitCount" class="text-slate-400"></span></p>
+        </div>
+        <div id="matched" class="mt-3 flex flex-wrap gap-2"></div>
+        <p id="matchedEmpty" class="mt-3 hidden text-sm text-slate-500">No matches yet — check that the right text was pasted.</p>
+      </div>
+    </div>
+
+    <!-- Checks -->
+    <div class="mt-4 min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p class="text-sm font-semibold text-slate-500">ATS formatting &amp; structure checks</p>
+      <ul id="checks" class="mt-3 divide-y divide-slate-100"></ul>
+    </div>
+
+    <!-- CTA -->
+    <div id="pack" class="mt-6 overflow-hidden rounded-2xl bg-slate-900 text-white shadow-lg">
+      <div class="grid gap-6 p-6 sm:grid-cols-3 sm:p-8">
+        <div class="min-w-0 sm:col-span-2">
+          <p class="text-xs font-semibold uppercase tracking-widest text-indigo-300">The fix, in one download</p>
+          <h2 class="mt-2 text-2xl font-bold">Executive Resume &amp; Cover Letter Pack — $9</h2>
+          <p class="mt-2 max-w-xl text-sm text-slate-300">
+            Three ATS-safe executive resume templates, a cover letter template, and a one-page guide to
+            beating the keyword filter. Printable, editable, and built for clean text extraction.
+          </p>
+          <ul class="mt-4 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
+            <li>✓ 3 executive resume formats</li>
+            <li>✓ Cover letter template</li>
+            <li>✓ “Beat the ATS” one-pager</li>
+            <li>✓ Printable HTML → PDF</li>
+          </ul>
+        </div>
+        <div class="flex flex-col justify-center gap-2">
+          <a id="ctaLink" href="#" class="rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold text-slate-900 hover:bg-slate-100">
+            Get the pack — $9
+          </a>
+          <p class="text-center text-[11px] text-slate-400">Instant download · Yours to keep</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="border-t border-slate-200 py-10">
+    <h2 class="text-lg font-semibold">Why resumes get filtered</h2>
+    <div class="mt-4 grid gap-4 sm:grid-cols-3">
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+        <p class="text-sm font-semibold">Keywords are matched, not understood</p>
+        <p class="mt-1 text-sm text-slate-600">Most systems look for literal terms from the posting. “Project management” and “managed projects” are not the same string.</p>
+      </div>
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+        <p class="text-sm font-semibold">Layout can break parsing</p>
+        <p class="mt-1 text-sm text-slate-600">Columns, tables, text boxes, and graphics are common causes of scrambled or empty extractions.</p>
+      </div>
+      <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+        <p class="text-sm font-semibold">Missing sections read as missing experience</p>
+        <p class="mt-1 text-sm text-slate-600">If a section can't be identified, its contents can be dropped — even when the experience is right there.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="border-t border-slate-200 bg-white">
+  <div class="mx-auto max-w-5xl px-5 py-6 text-xs text-slate-500">
+    <p>Free ATS resume checker. Runs 100% in your browser — no accounts, no uploads, no tracking.</p>
+    <p class="mt-1">Scores are an estimate of machine readability, not a guarantee of interviews or employment.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var GUMROAD_URL = "https://waheednoman.gumroad.com/l/executive-resume-pack";
+
+  /* ==SCORING-CORE-START==
+     Pure scoring logic — no DOM access in this block. tests/scoring.test.js extracts
+     it and runs it under Node, so keep DOM code out of it. */
+  var STOP = new Set((
+    "a about above after again against all also am an and any are as at be because been before being below between both but by can cannot could did do does doing down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just me more most must my myself no nor not of off on once only or other ought our ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they this those through to too under until up very was we were what when where which while who whom why with would you your yours yourself yourselves will shall may might able across ability etc via per within without using use used work working works role roles job jobs company team teams year years plus including include includes new strong excellent good great ideal preferred required requirements responsibilities qualifications candidate candidates applicant applicants position positions opportunity opportunities benefits salary apply " +
+    // contraction residues: apostrophes are stripped before tokenizing, so these are
+    // what "don't", "you'll", "we've", etc. become. Without them, "don" and "ll" leak in.
+    "dont doesnt didnt isnt arent wasnt werent wont wouldnt couldnt shouldnt cant mustnt shant " +
+    "youll youve youre youd youll heshe hes shes theyre theyve theyd thats whats lets theres heres whos " +
+    "im ive ill wed well itll thatll theyll hell " +
+    // posting boilerplate that is never a useful keyword
+    "nice comfortable person looking seeking hiring demonstrated ensure cross end " +
+    // copy/paste artifacts from web pages and PDFs
+    "nbsp amp quot rsquo lsquo ldquo rdquo mdash ndash"
+  ).split(" "));
+
+  var GENERIC = new Set(("experience experienced years year ability skills skill knowledge understanding environment environments fast paced detail oriented team player communication written verbal organizational problem solving analytical interpersonal leadership management managed manage").split(" "));
+
+  var SHORT_OK = new Set(("ai ar ba bi cd ci crm erp etl gcp hr iaas ios it kpi ml paas pm pr qa roi saas se sem seo sql ux ui vr 3d 4g 5g").split(" "));
+
+  // Words that end in "s" but are not plurals. Keeps the plural normalizer honest.
+  var SINGULAR_EXCEPT = new Set(("across always analysis basis business canvas class gas lens news plus series species status towards unless").split(" "));
+
+  var TOKEN_RE = /[a-z0-9][a-z0-9+#.]*/g;
+  var SPECIAL_BULLETS = /[\u25AA\u25CF\u25C6\u25BA\u25CB\u25A0\u2023\u2043\u27A4\u2794\u2713\u2714]/;
+  var EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+
+  // Conservative singularizer: only strips a trailing plural "s"/"ies".
+  // Deliberately does NOT stem verbs, so "lead" never matches "leader".
+  function singular(w) {
+    if (w.length < 4 || SINGULAR_EXCEPT.has(w)) return w;
+    if (/ies$/.test(w)) return w.slice(0, -3) + "y";
+    if (/(ss|us|is)$/.test(w)) return w;
+    if (/s$/.test(w)) return w.slice(0, -1);
+    return w;
+  }
+
+  function tokens(text) {
+    var raw = String(text == null ? "" : text).toLowerCase().replace(/['\u2019]/g, "");
+    var found = raw.match(TOKEN_RE) || [];
+    var out = [];
+    for (var i = 0; i < found.length; i++) {
+      var t = found[i].replace(/\.+$/, ""); // "2024." -> "2024", "e.g." -> "e.g"
+      if (t) out.push(t);
+    }
+    return out;
+  }
+
+  // Tokens used for matching: singularized, with numbers and 1-2 char noise dropped.
+  function keyTokens(text) {
+    var t = tokens(text);
+    var out = [];
+    for (var i = 0; i < t.length; i++) {
+      var w = singular(t[i]);
+      if (/^\d[\d+.\/-]*$/.test(w)) continue;        // 2024, 5+, 10-15, 3.5
+      if (w.length < 3 && !SHORT_OK.has(w)) continue; // ll, re, ve, don, im
+      out.push(w);
+    }
+    return out;
+  }
+
+  var STOP_N = new Set();
+  STOP.forEach(function (w) { STOP_N.add(w); STOP_N.add(singular(w)); });
+
+  var GENERIC_N = new Set();
+  GENERIC.forEach(function (w) { GENERIC_N.add(w); GENERIC_N.add(singular(w)); });
+
+  function extractKeywords(jd) {
+    var all = keyTokens(jd);
+    var content = all.filter(function (w) { return !STOP_N.has(w); });
+
+    var uni = Object.create(null);
+    for (var i = 0; i < content.length; i++) uni[content[i]] = (uni[content[i]] || 0) + 1;
+
+    // Bigrams come from the *unfiltered* stream so stopwords can't glue distant words
+    // together ("experience with kubernetes" must not become "experience kubernetes").
+    var bi = Object.create(null);
+    for (var j = 0; j < all.length - 1; j++) {
+      var a = all[j], b = all[j + 1];
+      if (STOP_N.has(a) || STOP_N.has(b)) continue;
+      var phrase = a + " " + b;
+      if (phrase.length <= 7) continue;
+      bi[phrase] = (bi[phrase] || 0) + 1;
+    }
+
+    var phrases = Object.keys(bi).filter(function (p) { return bi[p] >= 2; });
+
+    // Drop a single word only when it is an exact word of a kept phrase — not when it
+    // is merely a substring ("lead" must not be swallowed by "leader development").
+    var phraseWords = Object.create(null);
+    phrases.forEach(function (p) {
+      p.split(" ").forEach(function (w) { phraseWords[w] = true; });
+    });
+
+    var singles = Object.keys(uni).filter(function (w) {
+      if (phraseWords[w]) return false;
+      if (GENERIC_N.has(w) && uni[w] < 3) return false;
+      return true;
+    });
+
+    singles.sort(function (x, y) { return uni[y] - uni[x] || x.localeCompare(y); });
+    phrases.sort(function (x, y) { return bi[y] - bi[x] || x.localeCompare(y); });
+
+    var picked = phrases.slice(0, 12).concat(singles.slice(0, 28));
+    return picked.slice(0, 40).map(function (k) {
+      return { term: k, weight: bi[k] || uni[k] || 1 };
+    });
+  }
+
+  function scoreKeywords(keywords, resume) {
+    var hay = " " + keyTokens(resume).join(" ") + " ";
+    var hit = [], miss = [], got = 0, total = 0;
+    keywords.forEach(function (k) {
+      total += k.weight;
+      if (matchesTerm(hay, k.term)) { hit.push(k.term); got += k.weight; }
+      else miss.push(k.term);
+    });
+    return {
+      pct: total ? Math.round((got / total) * 100) : 0,
+      hit: hit,
+      miss: miss
+    };
+  }
+
+  // Conservative inflections only: plural and -ed/-ing verb forms. Deliberately
+  // excludes -er/-or/-ment, so "lead" never matches "leader" or "leadership".
+  function inflections(w) {
+    var out = [w];
+    if (w.length >= 4) {
+      out.push(w + "s", w + "es", w + "ed", w + "d", w + "ing");
+      if (/e$/.test(w)) out.push(w.slice(0, -1) + "ed", w.slice(0, -1) + "ing");
+      if (/[^aeiou]y$/.test(w)) out.push(w.slice(0, -1) + "ies", w.slice(0, -1) + "ied");
+    }
+    return out;
+  }
+
+  function termVariants(term) {
+    var out = [""];
+    term.split(" ").forEach(function (word) {
+      var next = [];
+      inflections(word).forEach(function (form) {
+        out.forEach(function (prefix) { next.push(prefix ? prefix + " " + form : form); });
+      });
+      out = next;
+    });
+    return out;
+  }
+
+  function matchesTerm(hay, term) {
+    if (hay.indexOf(" " + term + " ") !== -1) return true;
+    var forms = termVariants(term);
+    for (var i = 1; i < forms.length; i++) {
+      if (hay.indexOf(" " + forms[i] + " ") !== -1) return true;
+    }
+    return false;
+  }
+
+  var SECTION_DEFS = [
+    { name: "Summary or profile", re: /\b(professional summary|summary|profile|objective|about me)\b/ },
+    { name: "Work experience", re: /\b(work experience|professional experience|experience|employment|work history)\b/ },
+    { name: "Education", re: /\b(education|academic|degree|bachelor'?s?|master'?s? degree|mba|ph\.?d|doctorate|university|college)\b|(^|[^a-z])(b\.?s\.?|m\.?s\.?|b\.?a\.?|m\.?a\.?)([^a-z]|$)/ },
+    { name: "Skills", re: /\b(skills|competencies|technical skills|core competencies|expertise)\b/ },
+    { name: "Contact details", re: /[\w.+-]+@[\w-]+\.[\w.]+/ }
+  ];
+
+  function checkSections(text) {
+    var t = String(text).toLowerCase();
+    var found = SECTION_DEFS.filter(function (d) { return d.re.test(t); });
+    return { found: found, missing: SECTION_DEFS.filter(function (d) { return !d.re.test(t); }) };
+  }
+
+  function auditFormatting(text) {
+    var checks = [];
+    var lines = String(text).split(/\r?\n/).filter(function (l) { return l.trim().length; });
+
+    // A single "email | phone | linkedin" contact line is normal. Two or more
+    // pipe-heavy lines (or tab-heavy lines) is what actually looks like a table.
+    var tabLines = lines.filter(function (l) { return (l.match(/\t/g) || []).length >= 2; }).length;
+    var pipeLines = lines.filter(function (l) { return (l.match(/\|/g) || []).length >= 2; }).length;
+    var tableish = tabLines + pipeLines;
+    checks.push(tableish >= 2
+      ? { ok: false, title: "Possible table or column layout", detail: tableish + " line(s) look like table columns. Multi-column layouts are the most common cause of scrambled ATS text extraction. Use a single-column layout." }
+      : { ok: true, title: "Single-column layout", detail: "No table-like or column-like text patterns detected." });
+
+    var bulletCount = lines.filter(function (l) { return /^\s*([-*•·]|\d+[.)])\s+/.test(l); }).length;
+    checks.push(bulletCount >= 3
+      ? { ok: true, title: "Bulleted achievements", detail: bulletCount + " bulleted lines found — that's what recruiters scan." }
+      : { ok: false, title: "Few or no bullet points", detail: "Use 3–6 bullets per role with a result and a number where possible." });
+
+    checks.push(SPECIAL_BULLETS.test(text)
+      ? { ok: false, title: "Decorative bullet characters", detail: "Symbols like ▪ ● ◆ often become garbled characters. Use standard round bullets or hyphens." }
+      : { ok: true, title: "Standard bullet characters", detail: "No decorative bullet glyphs detected." });
+
+    checks.push(EMOJI.test(text)
+      ? { ok: false, title: "Emoji or icon characters", detail: "Emoji and icon fonts frequently break parsing and read as unprofessional in a resume file." }
+      : { ok: true, title: "No emoji or icons", detail: "Clean text characters throughout." });
+
+    var wc = tokens(text).length;
+    checks.push(wc >= 300 && wc <= 1000
+      ? { ok: true, title: "Resume length looks right", detail: wc + " words — roughly one to two pages." }
+      : { ok: false, title: "Resume length is off", detail: wc + " words. Aim for 350–900 words for a one- to two-page resume." });
+
+    var email = /[\w.+-]+@[\w-]+\.[\w.]+/.test(text);
+    var phone = (text.match(/\+?\d[\d\s().-]{7,}\d/g) || []).some(function (m) {
+      var digits = m.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 15; // rejects "2019 - 2022"
+    });
+    var linked = /linkedin\.com\//i.test(text);
+    checks.push(email && phone
+      ? { ok: true, title: "Contact details found", detail: "Email" + (linked ? ", phone, and LinkedIn profile detected." : " and phone detected. Adding a LinkedIn URL helps.") }
+      : { ok: false, title: "Incomplete contact details", detail: (!email ? "No email address detected. " : "") + (!phone ? "No phone number detected. " : "") + "Put contact details in the body of the document, not in a header or footer — headers and footers are often dropped by parsers." });
+
+    var dateRanges = (text.match(/\b(19|20)\d{2}\s*[–—-]\s*((19|20)\d{2}|present|current)\b/gi) || []).length;
+    checks.push(dateRanges >= 2
+      ? { ok: true, title: "Dated work history", detail: dateRanges + " date ranges found — parsers use these to build your timeline." }
+      : { ok: false, title: "Unclear employment dates", detail: "Use an explicit format such as “2019 – 2022” for every role. Month and year is even better." });
+
+    var headingCaps = lines.filter(function (l) {
+      var s = l.trim();
+      return s.length > 3 && s.length < 40 && s === s.toUpperCase() && /[A-Z]/.test(s) && !/^\d/.test(s);
+    }).length;
+    checks.push(headingCaps > 8
+      ? { ok: false, title: "Too many all-caps lines", detail: headingCaps + " all-caps lines found. Keep all-caps to section headings only." }
+      : { ok: true, title: "Heading style is readable", detail: "Section headings are not over-formatted." });
+
+    var okCount = checks.filter(function (c) { return c.ok; }).length;
+    return { checks: checks, pct: Math.round((okCount / checks.length) * 100) };
+  }
+  /* ==SCORING-CORE-END== */
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function words(text) {
+    return (String(text).toLowerCase().match(/[a-z0-9][a-z0-9+#.\-]*/g) || []);
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function render(kw, fmt, sec) {
+    $("results").classList.remove("hidden");
+
+    var overall = Math.round(kw.pct * 0.6 + fmt.pct * 0.25 + sec.pct * 0.15);
+
+    var circumference = 326.7;
+    var ring = $("ring");
+    ring.style.strokeDashoffset = String(circumference - (circumference * overall) / 100);
+    ring.setAttribute("stroke", overall >= 75 ? "#059669" : overall >= 50 ? "#d97706" : "#e11d48");
+    $("scoreNum").textContent = String(overall);
+
+    var verdict, help;
+    if (overall >= 80) { verdict = "Strong match — send it."; help = "Your keywords and structure should clear most filters. Tailor the summary per role."; }
+    else if (overall >= 60) { verdict = "Close — a few gaps to close."; help = "Add the missing keywords where they're true, and fix any red flags below."; }
+    else if (overall >= 40) { verdict = "Likely to be filtered."; help = "Cover the missing keywords and fix formatting before applying."; }
+    else { verdict = "High risk of rejection by the ATS."; help = "Rework the keywords and structure. This is a machine-readability problem, not a you problem."; }
+    $("verdict").textContent = verdict;
+    $("verdictHelp").textContent = help;
+
+    var bars = [
+      { label: "Keyword coverage", pct: kw.pct, weight: "60%" },
+      { label: "ATS-safe formatting", pct: fmt.pct, weight: "25%" },
+      { label: "Complete sections", pct: sec.pct, weight: "15%" }
+    ];
+    $("subscores").innerHTML = bars.map(function (b) {
+      var color = b.pct >= 75 ? "bg-emerald-500" : b.pct >= 50 ? "bg-amber-500" : "bg-rose-500";
+      return '<div><div class="mb-1 flex items-center justify-between text-sm"><span class="font-medium">' + b.label +
+        '</span><span class="text-slate-500">' + b.pct + '% <span class="text-xs text-slate-400">· weight ' + b.weight + '</span></span></div>' +
+        '<div class="h-2 w-full overflow-hidden rounded-full bg-slate-100"><div class="h-2 rounded-full ' + color + '" style="width:' + b.pct + '%"></div></div></div>';
+    }).join("");
+
+    $("missing").innerHTML = kw.miss.map(function (k) {
+      return '<span class="chip max-w-full break-words rounded-md bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700 ring-1 ring-rose-200">' + esc(k) + "</span>";
+    }).join("");
+    $("matched").innerHTML = kw.hit.map(function (k) {
+      return '<span class="chip max-w-full break-words rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">' + esc(k) + "</span>";
+    }).join("");
+    $("missCount").textContent = "(" + kw.miss.length + ")";
+    $("hitCount").textContent = "(" + kw.hit.length + ")";
+    $("missingEmpty").classList.toggle("hidden", kw.miss.length > 0);
+    $("matchedEmpty").classList.toggle("hidden", kw.hit.length > 0);
+
+    var iconOk = '<span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-bold text-emerald-700">✓</span>';
+    var iconBad = '<span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-[11px] font-bold text-rose-700">!</span>';
+    $("checks").innerHTML = fmt.checks.map(function (c) {
+      return '<li class="flex gap-3 py-2.5">' + (c.ok ? iconOk : iconBad) +
+        '<div class="min-w-0"><p class="text-sm font-medium break-words">' + esc(c.title) + '</p><p class="text-xs text-slate-500 break-words">' + esc(c.detail) + "</p></div></li>";
+    }).join("") + '<li class="flex gap-3 py-2.5">' + (sec.missing.length === 0 ? iconOk : iconBad) +
+      '<div class="min-w-0"><p class="text-sm font-medium break-words">' + (sec.missing.length === 0 ? "All standard sections present" : "Missing sections: " + sec.missing.map(function (m) { return m.name; }).join(", ")) +
+      '</p><p class="text-xs text-slate-500 break-words">' + (sec.missing.length === 0 ? "Summary, experience, education, skills, and contact details all detected." : "Unrecognized sections can be dropped entirely by the parser. Use standard headings.") + "</p></div></li>";
+
+    $("ctaLink").href = GUMROAD_URL;
+    window.__report = buildReport(overall, kw, fmt, sec);
+    $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function buildReport(overall, kw, fmt, sec) {
+    var lines = ["ATS RESUME CHECK — " + new Date().toLocaleDateString(), "",
+      "Overall match: " + overall + "/100",
+      "Keyword coverage: " + kw.pct + "%", "Formatting: " + fmt.pct + "%", "Sections: " + sec.pct + "%", "",
+      "MISSING KEYWORDS (" + kw.miss.length + "):", kw.miss.join(", ") || "none", "",
+      "MATCHED KEYWORDS (" + kw.hit.length + "):", kw.hit.join(", ") || "none", "", "CHECKS:"];
+    fmt.checks.forEach(function (c) { lines.push((c.ok ? "[PASS] " : "[FIX]  ") + c.title + " — " + c.detail); });
+    lines.push((sec.missing.length ? "[FIX]  " : "[PASS] ") + "Sections — " + (sec.missing.length ? "missing " + sec.missing.map(function (m) { return m.name; }).join(", ") : "all present"));
+    lines.push("", "Generated by the free ATS Resume Checker. Everything ran in this browser tab; no resume text was uploaded.");
+    lines.push("Scores are an estimate of machine readability, not a guarantee of interviews.");
+    return lines.join("\n");
+  }
+
+  function countWords(el, out) {
+    var n = words(el.value).length;
+    out.textContent = n + (n === 1 ? " word" : " words");
+  }
+
+  $("resume").addEventListener("input", function () { countWords($("resume"), $("resumeCount")); });
+  $("jd").addEventListener("input", function () { countWords($("jd"), $("jdCount")); });
+
+  $("clear").addEventListener("click", function () {
+    $("resume").value = ""; $("jd").value = "";
+    countWords($("resume"), $("resumeCount")); countWords($("jd"), $("jdCount"));
+    $("results").classList.add("hidden");
+    $("error").classList.add("hidden");
+    window.__report = "";
+  });
+
+  $("copyMissing").addEventListener("click", function () {
+    var text = (window.__report || "").split("MISSING KEYWORDS")[1] || "";
+    var list = text.split("\n")[1] || "";
+    if (navigator.clipboard) navigator.clipboard.writeText(list.trim());
+    this.textContent = "Copied";
+    var self = this; setTimeout(function () { self.textContent = "Copy"; }, 1500);
+  });
+
+  $("downloadReport").addEventListener("click", function () {
+    if (!window.__report) return;
+    var blob = new Blob([window.__report], { type: "text/plain;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "ats-check-report.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  });
+
+  $("run").addEventListener("click", function () {
+    var resume = $("resume").value.trim();
+    var jd = $("jd").value.trim();
+    var err = $("error");
+
+    if (words(resume).length < 40) {
+      err.textContent = "Paste at least a few lines of your resume (40+ words).";
+      err.classList.remove("hidden"); return;
+    }
+    if (words(jd).length < 30) {
+      err.textContent = "Paste the job description too (30+ words) — that's what the keywords are measured against.";
+      err.classList.remove("hidden"); return;
+    }
+    err.classList.add("hidden");
+
+    var keywords = extractKeywords(jd);
+    var kw = scoreKeywords(keywords, resume);
+    var fmt = auditFormatting(resume);
+    var sec = checkSections(resume);
+    var secPct = Math.round((sec.found.length / (sec.found.length + sec.missing.length)) * 100);
+    render(kw, fmt, { pct: secPct, missing: sec.missing, found: sec.found });
+  });
+})();
+</script>
+</body>
+</html>
